@@ -21,14 +21,22 @@ const prepareMarkupForPassing = (markup: string) => {
 
 const getLabel = (id: string, lang: string) => {
   const labels: Record<string, Record<string, string>> = {
-    pl: {
-      loading: "wgrywam dane",
-      "submit data": "prześlij dane",
-    },
     en: {
-      loading: "loading",
-      "submit data": "submit data",
+      "loading": "Loading",
+      "submit data": "Submit Data"
     },
+    km: {
+      "loading": "កំពុងផ្ទុក",
+      "submit data": "ដាក់ស្នើទិន្នន័យ"
+    },
+    jp: {
+      "loading": "読み込み中",
+      "submit data": "データを送信"
+    },
+    vi: {
+      "loading": "Đang Tải",
+      "submit data": "Gửi Dữ Liệu"
+    }
   };
 
   const langId = lang as keyof typeof labels;
@@ -60,7 +68,7 @@ export const Editor: FunctionComponent<{
   allowSameOrigin = false,
   onError,
   loading = false,
-  lang = "pl",
+  lang = "vi",
   iframeId = "h5p-editor",
 }) => {
   const [height, setHeight] = useState<number>(100);
