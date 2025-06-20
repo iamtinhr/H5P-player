@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Editor from "./components/hh5p/contextless/editor";
 import Player from "./components/hh5p/contextless/player";
-import { H5PObject, EditorSettings } from "@escolalms/h5p-react";
+import { H5PObject, EditorSettings } from "@tinhr/h5p-react";
 
 type AppState =
   | {

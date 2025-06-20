@@ -13,7 +13,7 @@ import type {
   H5PEditorStatus,
   H5PEditorContent,
   EditorSettings,
-} from "@escolalms/h5p-react";
+} from "@tinhr/h5p-react";
 
 const prepareMarkupForPassing = (markup: string) => {
   return unescape(markup);

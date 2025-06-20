@@ -16,7 +16,7 @@ import Loader from "./../loader";
 
 import { EditorContext } from "../context";
 
-import type { XAPIEvent, PlayerProps } from "@escolalms/h5p-react";
+import type { XAPIEvent, PlayerProps } from "@tinhr/h5p-react";
 
 const DEFAULT_HEIGHT = 100;
 

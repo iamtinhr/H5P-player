@@ -10,7 +10,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { unescape } from "html-escaper";
 import throttle from "lodash.throttle";
 
-import type { XAPIEvent, H5PObject } from "@escolalms/h5p-react";
+import type { XAPIEvent, H5PObject } from "@tinhr/h5p-react";
 
 const srcIsAbsolute = (src: string) => src.includes("://");
 

@@ -6,7 +6,7 @@ import type {
   EditorSettings,
   H5PEditorContent,
   H5PObject,
-} from "@escolalms/h5p-react";
+} from "@tinhr/h5p-react";
 
 interface IMock {
   children?: React.ReactElement[] | React.ReactElement;

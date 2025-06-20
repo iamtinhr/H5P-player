@@ -1,4 +1,4 @@
-declare module "@escolalms/h5p-react" {
+declare module "@tinhr/h5p-react" {
   type Dict = {
     [key: string]: string | Dict;
   };
