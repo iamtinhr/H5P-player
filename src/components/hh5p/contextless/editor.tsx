@@ -23,19 +23,19 @@ const getLabel = (id: string, lang: string) => {
   const labels: Record<string, Record<string, string>> = {
     en: {
       "loading": "Loading",
-      "submit data": "Submit Data"
+      "submit data": "Create H5P"
     },
     km: {
       "loading": "កំពុងផ្ទុក",
-      "submit data": "ដាក់ស្នើទិន្នន័យ"
+      "submit data": "បង្កើត H5P"
     },
     jp: {
       "loading": "読み込み中",
-      "submit data": "データを送信"
+      "submit data": "H5Pを作成する"
     },
     vi: {
       "loading": "Đang Tải",
-      "submit data": "Gửi Dữ Liệu"
+      "submit data": "Tạo H5P"
     }
   };
 
