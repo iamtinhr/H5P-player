@@ -1,137 +1,130 @@
 import React, {
-  useEffect,
-  useState,
-  FunctionComponent,
-  useMemo,
-  useRef,
+    useEffect,
+    useState,
+    FunctionComponent,
+    useMemo,
+    useRef,
 } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { unescape } from "html-escaper";
 import Loader from "./../loader";
 
 import type {
-  H5PEditorStatus,
-  H5PEditorContent,
-  EditorSettings,
+    H5PEditorStatus,
+    H5PEditorContent,
+    EditorSettings,
 } from "@tinhr/h5p-react";
 
 const prepareMarkupForPassing = (markup: string) => {
-  return unescape(markup);
+    return unescape(markup);
 };
 
-const getLabel = (id: string, lang: string) => {
-  const labels: Record<string, Record<string, string>> = {
-    en: {
-      "loading": "Loading",
-      "submit data": "Create H5P",
-      "update data": "Update H5P"
-    },
-    km: {
-      "loading": "កំពុងផ្ទុក",
-      "submit data": "បង្កើត H5P",
-      "update data": "កែប្រែ H5P"
-    },
-    jp: {
-      "loading": "読み込み中",
-      "submit data": "H5Pを作成する",
-      "update data": "H5Pを更新する"
-    },
-    vi: {
-      "loading": "Đang Tải",
-      "submit data": "Tạo H5P",
-      "update data": "Cập nhật H5P"
+const getLabel = (id: string, lang: string, isNew: boolean) => {
+    const labels: Record<string, Record<string, string>> = {
+        en: {
+            "loading": "Loading",
+            "submit data": isNew ? "Create H5P" : "Update H5P"
+        },
+        km: {
+            "loading": "កំពុងផ្ទុក",
+            "submit data": isNew ? "បង្កើត H5P" : "ធ្វើបច្ចុប្បន្នភាព H5P"
+        },
+        jp: {
+            "loading": "読み込み中",
+            "submit data": isNew ? "H5Pを作成する" : "H5Pを更新する"
+        },
+        vi: {
+            "loading": "Đang Tải",
+            "submit data": isNew ? "Tạo H5P" : "Cập nhật H5P"
+        }
+    };
+
+    const langId = lang as keyof typeof labels;
+
+    if (labels[langId] && labels[langId][id]) {
+        return labels[langId][id];
     }
-  };
-
-  const langId = lang as keyof typeof labels;
-
-  if (labels[langId] && labels[langId][id]) {
-    return labels[langId][id];
-  }
-  return id;
+    return id;
 };
-
-// TODO: make some kind of messaging system
-// e.g. make interface for all of possible messages and sendMessage fn
-// which will implement those interfaces
-// now it's really loose, and you have to know the lib to use it
 
 export const Editor: FunctionComponent<{
-  id?: number | string;
-  state: EditorSettings;
-  allowSameOrigin?: boolean;
-  onSubmit?: (data: H5PEditorContent, id?: string | number) => void;
-  onError?: (error: unknown) => void;
-  loading?: boolean;
-  lang?: string;
-  iframeId?: string;
+    id?: number | string;
+    state: EditorSettings;
+    allowSameOrigin?: boolean;
+    onSubmit?: (data: H5PEditorContent, id?: string | number) => void;
+    onError?: (error: unknown) => void;
+    loading?: boolean;
+    lang?: string;
+    iframeId?: string;
+    isNew?: boolean; // Add isNew prop
 }> = ({
-  id,
-  onSubmit,
-  state,
-  allowSameOrigin = false,
-  onError,
-  loading = false,
-  lang = "vi",
-  iframeId = "h5p-editor",
-}) => {
-  const [height, setHeight] = useState<number>(100);
-  const iFrameRef = useRef<HTMLIFrameElement>(null);
+          id,
+          onSubmit,
+          state,
+          allowSameOrigin = false,
+          onError,
+          loading = false,
+          lang = "vi",
+          iframeId = "h5p-editor",
+          isNew = true, // Default to true for new content
+      }) => {
+    const [height, setHeight] = useState<number>(100);
+    const iFrameRef = useRef<HTMLIFrameElement>(null);
 
-  useEffect(() => {
-    const onMessage = (event: MessageEvent) => {
-      if (!(event.origin === window.location.origin) && !allowSameOrigin) {
-        return;
-      }
-      if (event.data.iFrameHeight) {
-        setHeight(event.data.iFrameHeight);
-      }
-      if (event.data.h5pEditorStatus) {
-        const status: H5PEditorStatus = event.data;
-        if (status.h5pEditorStatus === "success") {
-          onSubmit &&
-            onSubmit(
-              {
-                ...status.data,
-                nonce: state.nonce,
-              },
-              id
-            );
+    useEffect(() => {
+        const onMessage = (event: MessageEvent) => {
+            if (!(event.origin === window.location.origin) && !allowSameOrigin) {
+                return;
+            }
+            if (event.data.iFrameHeight) {
+                setHeight(event.data.iFrameHeight);
+            }
+            if (event.data.h5pEditorStatus) {
+                const status: H5PEditorStatus = event.data;
+                if (status.h5pEditorStatus === "success") {
+                    onSubmit &&
+                    onSubmit(
+                        {
+                            ...status.data,
+                            nonce: state.nonce,
+                        },
+                        id
+                    );
+                }
+
+                status.h5pEditorStatus === "error" && onError && onError(status.error);
+            }
+        };
+
+        window && window.addEventListener("message", onMessage);
+        return () => {
+            window && window.removeEventListener("message", onMessage);
+        };
+    }, [iFrameRef, state, onSubmit, id]);
+
+    const src = useMemo(() => {
+        const settings = state;
+        if (!settings) return "";
+
+        const content = state.contents
+            ? state?.contents[Object.keys(state.contents)[0]]
+            : null;
+        const params = content ? content.jsonContent : "";
+
+        try {
+            params && JSON.parse(params);
+        } catch (er: any) {
+            onError && onError(er && er.toString());
+            return null;
         }
 
-        status.h5pEditorStatus === "error" && onError && onError(status.error);
-      }
-    };
+        const library = content ? content.library : "";
 
-    window && window.addEventListener("message", onMessage);
-    return () => {
-      window && window.removeEventListener("message", onMessage);
-    };
-  }, [iFrameRef, state, onSubmit, id]);
-
-  const src = useMemo(() => {
-    const settings = state;
-    if (!settings) return "";
-
-    const content = state.contents
-      ? state?.contents[Object.keys(state.contents)[0]]
-      : null;
-    const params = content ? content.jsonContent : "";
-
-    try {
-      params && JSON.parse(params);
-    } catch (er: any) {
-      onError && onError(er && er.toString());
-      return null;
-    }
-
-    const library = content ? content.library : "";
-
-    const scriptInline = `
+        const scriptInline = `
       (function ($) {
           const postMessage = (data) => parent.postMessage(data, "${
             window.location.origin
-          }");
+        }");
           const resizeObserver = new ResizeObserver((entries) =>
               postMessage({ iFrameHeight: entries[0].contentRect.height })
           );
@@ -188,79 +181,75 @@ export const Editor: FunctionComponent<{
       })(H5P.jQuery);
       `;
 
-    const markup = renderToStaticMarkup(
-      <html>
-        <head>
-          <style>{` body, html {margin:0; padding:0;}`}</style>
-          <script>
-            {`const H5PIntegration = window.H5PIntegration = ${JSON.stringify(
-              settings
-            )}; `}
-          </script>
-          {settings.core.scripts.map((script) => (
-            <script key={script} src={script}></script>
-          ))}
-          {settings.core.styles.map((style) => (
-            <link
-              type="text/css"
-              rel="stylesheet"
-              key={style}
-              href={style}
-            ></link>
-          ))}
-        </head>
-        <body>
-        <div className="h5p-editor-wrapper">
-            <div id="h5p-editor" className="height-observer">
-                {getLabel("loading", lang)}
-            </div>
-            <p></p>
-            {content && (
+        const markup = renderToStaticMarkup(
+            <html>
+            <head>
+                <style>{` body, html {margin:0; padding:0;}`}</style>
+                <script>
+                    {`const H5PIntegration = window.H5PIntegration = ${JSON.stringify(
+                        settings
+                    )}; `}
+                </script>
+                {settings.core.scripts.map((script) => (
+                    <script key={script} src={script}></script>
+                ))}
+                {settings.core.styles.map((style) => (
+                    <link
+                        type="text/css"
+                        rel="stylesheet"
+                        key={style}
+                        href={style}
+                    ></link>
+                ))}
+            </head>
+            <body>
+            <div className="h5p-editor-wrapper">
+                <div id="h5p-editor" className="height-observer">
+                    {getLabel("loading", lang, isNew)}
+                </div>
+                <p></p>
                 <button className="h5p-core-button" id="h5p-editor-submit">
-                    {getLabel(id ? "update data" : "submit data", lang)}
+                    {getLabel("submit data", lang, isNew)}
                 </button>
+                <script dangerouslySetInnerHTML={{ __html: scriptInline }} />
+            </div>
+            </body>
+            </html>
+        );
+
+        const pMarkup = prepareMarkupForPassing(markup);
+
+        return window.URL.createObjectURL(
+            new Blob([pMarkup], {
+                type: "text/html",
+            })
+        );
+    }, [state, isNew]);
+
+    return (
+        <div
+            className="h5p-editor"
+            style={{ height: height, position: "relative" }}
+        >
+            {loading && <Loader />}
+
+            {src && (
+                <iframe
+                    ref={iFrameRef}
+                    title="editor"
+                    src={src}
+                    id={iframeId}
+                    style={{
+                        width: "100%",
+                        height: "100%",
+                        margin: 0,
+                        padding: 0,
+                        border: "none",
+                    }}
+                ></iframe>
             )}
-            <script dangerouslySetInnerHTML={{__html: scriptInline}}/>
         </div>
-        </body>
-      </html>
     );
-
-    const pMarkup = prepareMarkupForPassing(markup);
-
-    return window.URL.createObjectURL(
-      new Blob([pMarkup], {
-        type: "text/html",
-      })
-    );
-  }, [state]);
-
-  return (
-    <div
-      className="h5p-editor"
-      style={{ height: height, position: "relative" }}
-    >
-      {loading && <Loader />}
-
-      {src && (
-        <iframe
-          ref={iFrameRef}
-          title="editor"
-          src={src}
-          id={iframeId}
-          // TODO test this
-          //srcDoc={src}
-          style={{
-            width: "100%",
-            height: "100%",
-            margin: 0,
-            padding: 0,
-            border: "none",
-          }}
-        ></iframe>
-      )}
-    </div>
-  );
 };
 
 export default Editor;
