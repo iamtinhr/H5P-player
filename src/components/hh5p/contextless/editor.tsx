@@ -23,19 +23,23 @@ const getLabel = (id: string, lang: string) => {
   const labels: Record<string, Record<string, string>> = {
     en: {
       "loading": "Loading",
-      "submit data": "Create H5P"
+      "submit data": "Create H5P",
+      "update data": "Update H5P"
     },
     km: {
       "loading": "កំពុងផ្ទុក",
-      "submit data": "បង្កើត H5P"
+      "submit data": "បង្កើត H5P",
+      "update data": "កែប្រែ H5P"
     },
     jp: {
       "loading": "読み込み中",
-      "submit data": "H5Pを作成する"
+      "submit data": "H5Pを作成する",
+      "update data": "H5Pを更新する"
     },
     vi: {
       "loading": "Đang Tải",
-      "submit data": "Tạo H5P"
+      "submit data": "Tạo H5P",
+      "update data": "Cập nhật H5P"
     }
   };
 
@@ -206,16 +210,18 @@ export const Editor: FunctionComponent<{
           ))}
         </head>
         <body>
-          <div className="h5p-editor-wrapper">
+        <div className="h5p-editor-wrapper">
             <div id="h5p-editor" className="height-observer">
-              {getLabel("loading", lang)}
+                {getLabel("loading", lang)}
             </div>
             <p></p>
-            <button className="h5p-core-button" id="h5p-editor-submit">
-              {getLabel("submit data", lang)}
-            </button>
-            <script dangerouslySetInnerHTML={{ __html: scriptInline }} />
-          </div>
+            {content && (
+                <button className="h5p-core-button" id="h5p-editor-submit">
+                    {getLabel(id ? "update data" : "submit data", lang)}
+                </button>
+            )}
+            <script dangerouslySetInnerHTML={{__html: scriptInline}}/>
+        </div>
         </body>
       </html>
     );
