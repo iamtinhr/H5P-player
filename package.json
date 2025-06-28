@@ -1,6 +1,6 @@
 {
   "name": "@tinhr/h5p-react",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "dependencies": {
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
